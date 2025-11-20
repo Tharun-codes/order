@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import PDFDocument from "pdfkit";
 import dayjs from "dayjs";
 import { v4 as uuidv4 } from "uuid";
+import path from "path";
 
 dotenv.config();
 
@@ -18,6 +19,24 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
+
+app.get("/", (_req, res) => {
+  res.sendFile("index.html", { root: path.join(process.cwd(), "public") });
+});
+
+/* basic heartbeat + echo endpoints */
+app.get("/api/status", (req, res) => {
+  res.json({ success: true, status: "ok" });
+});
+
+app.post("/api/status", (req, res) => {
+  const { message } = req.body || {};
+  res.json({
+    success: true,
+    status: "received",
+    message: message || "No message provided"
+  });
+});
 
 const PORT = process.env.PORT || 3000;
 
