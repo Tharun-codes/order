@@ -46,6 +46,15 @@ function safeNumber(v) {
   return Number.isFinite(n) ? n : 0;
 }
 
+function sanitizeFileName(value) {
+  return (value || "invoice")
+    .toString()
+    .trim()
+    .replace(/[<>:"/\\|?*\u0000-\u001F]/g, "")
+    .replace(/\s+/g, "_")
+    .slice(0, 80) || "invoice";
+}
+
 /* ============================================================
    1) NEW CUSTOMER + FIRST ORDER
    (same logic as before - inserts rent_status = 'ACTIVE' for new customers)
@@ -364,10 +373,11 @@ app.get("/api/invoice/:orderId", async (req, res) => {
     );
 
     const doc = new PDFDocument({ size: "A4", margin: 40 });
-    const filename = `invoice-${order.invoice_no || orderId}.pdf`;
+    const safeCustomerName = sanitizeFileName(order.cname);
+    const filename = `${safeCustomerName}.pdf`;
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     doc.pipe(res);
 
     const teal = "#006666";
@@ -398,7 +408,22 @@ app.get("/api/invoice/:orderId", async (req, res) => {
       { align: "center" }
     );
     cy += 25;
-    doc.text(`CUSTOMER NAME: ${order.cname}`, 0, cy, { align: "center" });
+    const nameLine = `CUSTOMER NAME: ${order.cname}`;
+    doc.font("Helvetica-Bold").fontSize(12);
+    const nameWidth = doc.widthOfString(nameLine);
+    const usableWidth =
+      doc.page.width - doc.page.margins.left - doc.page.margins.right;
+    const highlightWidth = Math.min(usableWidth, nameWidth + 30);
+    const highlightX =
+      doc.page.margins.left + (usableWidth - highlightWidth) / 2;
+    doc.save();
+    doc.fillColor("#fff3cd")
+      .roundedRect(highlightX, cy - 6, highlightWidth, 22, 8)
+      .fill();
+    doc.restore();
+    doc.font("Helvetica-Bold").fillColor(teal);
+    doc.text(nameLine, 0, cy, { align: "center" });
+    doc.font("Helvetica").fillColor("#000");
     cy += 25;
     doc.text(`PHONE: ${order.cphone}`, 0, cy, { align: "center" });
     cy += 25;

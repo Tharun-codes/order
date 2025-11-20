@@ -35,6 +35,18 @@
     font-size: 13px;
   }
 
+  .name-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 12px;
+    border-radius: 999px;
+    background: #fff3cd;
+    color: #8b6b00;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
   .page {
     max-width: 1100px;
     margin: 0 auto;
@@ -501,10 +513,10 @@
 }
 
   // ---------- CONFIG ----------
-  const PRODUCTS = [
+const PRODUCTS = [
     "xframe","alige","piller box","wheels",
     "painting ladder","motor","supportings","machine",
-    "board","poles"
+    "board","poles","jack"
   ];
   const productsList = document.getElementById('productsList');
   const itemsContainer = document.getElementById('itemsContainer');
@@ -518,6 +530,44 @@
   let currentResults = [];
   let activeResultIndex = -1;
   let lastQuery = '';
+
+  function sanitizeFileName(name){
+    return (name || 'invoice')
+      .trim()
+      .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '')
+      .replace(/\s+/g, '_')
+      .slice(0, 80) || 'invoice';
+  }
+
+  async function downloadInvoiceFile(orderId, customerName){
+    try {
+      const response = await fetch(`/api/invoice/${orderId}`);
+      if(!response.ok) throw new Error('Unable to fetch invoice');
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${sanitizeFileName(customerName)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(()=> URL.revokeObjectURL(url), 1500);
+      showPopup({
+        title: 'Downloading',
+        message: `Invoice saved as ${sanitizeFileName(customerName)}.pdf`,
+        type: 'success',
+        duration: 2000
+      });
+    } catch (err) {
+      console.error(err);
+      showPopup({
+        title: 'Download failed',
+        message: err.message || 'Unable to download invoice.',
+        type: 'error'
+      });
+      window.open(`/api/invoice/${orderId}`, '_blank');
+    }
+  }
 
   searchMeta.textContent = 'Type at least one letter to search customers.';
 
@@ -821,7 +871,7 @@
     return Math.max(1, diff);
   }
 
-  function generatePreview(){
+function generatePreview(){
     try {
      const name = val("customerName");
 const phone = val("phone");
@@ -865,7 +915,7 @@ const address = val("address");
                     <div style="text-align:right"><small>${new Date().toLocaleDateString()}</small></div>
                   </div>
                   <hr/>
-                  <div><strong>Name:</strong> ${escapeHtml(name)} &nbsp; <strong>Phone:</strong> ${escapeHtml(phone)}</div>
+                  <div><strong>Name:</strong> <span class="name-chip">${escapeHtml(name)}</span> &nbsp; <strong>Phone:</strong> ${escapeHtml(phone)}</div>
                   <div><strong>Address:</strong> ${escapeHtml(address)}</div>
                   <div style="margin-top:8px">
                   <strong>Rent:</strong> ${rent_start || 'N/A'} 
@@ -934,8 +984,8 @@ const address = val("address");
         });
         return;
       }
-      // open invoice PDF
-      window.open(`/api/invoice/${data.orderId}`, '_blank');
+      const nameForFile = savedPayload?.name || document.getElementById('customerName').value || 'invoice';
+      await downloadInvoiceFile(data.orderId, nameForFile);
     } catch (err) {
       console.error(err);
       showPopup({
