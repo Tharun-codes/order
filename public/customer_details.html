@@ -413,7 +413,7 @@ let customersCache = [];
    Load single customer details
    ------------------------- */
 async function loadCustomerDetails(id){
-  currentCustomerId = id;
+  currentCustomerId = Number(id);
   try {
     const res = await fetch('/api/customer-details?id=' + encodeURIComponent(id));
     const data = await res.json();
@@ -434,6 +434,7 @@ async function loadCustomerDetails(id){
     $id('detailsMode').style.display = 'block';
 
     const cust = data.customer;
+    currentCustomerId = Number(cust.id);
     $id('custName').textContent = (cust.name || '').toUpperCase();
     $id('custPhone').textContent = cust.phone || '';
     $id('custAddress').textContent = (cust.address || '').toUpperCase();
@@ -444,7 +445,8 @@ async function loadCustomerDetails(id){
     // orders -> display all (but editor edits only last)
     const ordersBody = $id('ordersBody');
     ordersBody.innerHTML = '';
-    data.orderDetails.forEach(o => {
+const latestOnly = data.orderDetails.length ? [data.orderDetails[0]] : [];
+    latestOnly.forEach(o => {
       const tr = document.createElement('tr');
       const orderDate = formatDisplayDate(o.order.order_date);
       const rentStart = formatDisplayDate(o.order.rent_start);
@@ -754,7 +756,16 @@ btnSaveOrder.addEventListener('click', async ()=>{
    Delete customer (visible only in details)
    ------------------------- */
 $id('btnDelete').addEventListener('click', async ()=>{
-  if(!currentCustomerId) return;
+  const targetId = Number(currentCustomerId);
+  if(!Number.isFinite(targetId) || targetId <= 0) {
+    showPopup({
+      title: "Delete unavailable",
+      message: "Customer id missing. Reload the page and try again.",
+      type: "warning"
+    });
+    return;
+  }
+  const deleteBtn = $id('btnDelete');
   const confirmed = await showConfirmPopup({
     title: "Delete customer?",
     message: "This will remove the customer and all orders. This cannot be undone.",
@@ -764,10 +775,11 @@ $id('btnDelete').addEventListener('click', async ()=>{
   });
   if(!confirmed) return;
   try {
+    deleteBtn.disabled = true;
     const res = await fetch('/api/delete-customer', {
       method:'DELETE',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ customerId: currentCustomerId })
+      body: JSON.stringify({ customerId: targetId })
     });
     const d = await res.json();
     if(d.success){
@@ -792,6 +804,8 @@ $id('btnDelete').addEventListener('click', async ()=>{
       message: "Error deleting customer.",
       type: "error"
     });
+  } finally {
+    deleteBtn.disabled = false;
   }
 });
 
