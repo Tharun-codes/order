@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>New Customer — Create Order</title>
+<link rel="stylesheet" href="popup.css">
+
+<style>
+  :root {
+    --peacock: #016A70;
+    --peacock-dark: #014d50;
+    --accent: #01949A;
+    --light-bg: #EAFDFC;
+    --text: #033f42;
+    --card-bg: #ffffff;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: radial-gradient(circle at 15% 20%, rgba(1,148,154,0.12), transparent 55%),
+                radial-gradient(circle at 85% 0%, rgba(1,106,112,0.12), transparent 45%),
+                var(--light-bg);
+    min-height: 100vh;
+    margin: 0;
+    padding: 32px 18px;
+    color: var(--text);
+  }
+
+  .card {
+    background: var(--card-bg);
+    padding: 34px;
+    border-radius: 20px;
+    max-width: 1050px;
+    margin: 0 auto;
+    box-shadow: 0 25px 70px rgba(1, 74, 77, 0.12);
+    border: 1px solid rgba(1, 106, 112, 0.12);
+  }
+
+  h2 {
+    margin: 0;
+    color: var(--peacock-dark);
+    font-size: 30px;
+    letter-spacing: 0.5px;
+  }
+
+  .subtitle {
+    margin: 6px 0 0 0;
+    color: rgba(3, 63, 66, 0.75);
+    font-size: 15px;
+  }
+
+  .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .back {
+    background: transparent;
+    color: var(--peacock);
+    padding: 8px 0;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: 0.2s;
+  }
+
+  .back:hover {
+    color: var(--peacock-dark);
+    transform: translateX(-2px);
+  }
+
+  label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: var(--peacock-dark);
+    font-size: 14px;
+    letter-spacing: 0.2px;
+  }
+
+  input, textarea {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1px solid #cfdede;
+    border-radius: 10px;
+    font-size: 15px;
+    background: #ffffff;
+    color: var(--text);
+    transition: border 0.2s, box-shadow 0.2s;
+  }
+
+  input:focus,
+  textarea:focus {
+    border: 1px solid var(--peacock);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(1, 106, 112, 0.15);
+  }
+
+  .section {
+    margin-top: 28px;
+    padding: 22px;
+    border-radius: 16px;
+    border: 1px solid rgba(1, 106, 112, 0.08);
+    background: rgba(255,255,255,0.9);
+  }
+
+  .section h3 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    color: var(--peacock-dark);
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px 22px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .highlight-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(1,148,154,0.1);
+    color: var(--peacock-dark);
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 13px;
+  }
+
+  .products {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  .product-checkbox {
+    border: 1px solid #c0dadb;
+    background: #fbffff;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 15px;
+    transition: 0.2s;
+    color: var(--peacock-dark);
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+  }
+
+  .product-checkbox input {
+    width: auto;
+    margin: 0;
+  }
+
+  .product-checkbox:hover {
+    background: var(--light-bg);
+    border-color: var(--peacock);
+    transform: translateY(-1px);
+  }
+
+  .product-checkbox input:checked + span {
+    color: var(--peacock);
+  }
+
+  .items-wrapper {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .item-row {
+    display: grid;
+    grid-template-columns: minmax(140px, 1fr) repeat(2, 130px) 90px;
+    align-items: center;
+    gap: 12px;
+    background: #f7ffff;
+    border: 1px solid #cfeeee;
+    padding: 12px 16px;
+    border-radius: 14px;
+  }
+
+  .item-row strong {
+    letter-spacing: 0.5px;
+    color: var(--peacock-dark);
+  }
+
+  .item-row input {
+    width: 100%;
+  }
+
+  .item-row button {
+    margin: 0;
+    padding: 8px 12px;
+    font-size: 13px;
+    background: rgba(1,106,112,0.1);
+    color: var(--peacock-dark);
+  }
+
+  .item-row button:hover {
+    background: rgba(1,106,112,0.2);
+  }
+
+  .empty-state {
+    border: 1px dashed rgba(1,106,112,0.25);
+    padding: 18px;
+    border-radius: 14px;
+    text-align: center;
+    color: rgba(3,63,66,0.7);
+    font-size: 14px;
+  }
+
+  .summary-card {
+    margin-top: 18px;
+    padding: 18px;
+    border-radius: 16px;
+    border: 1px solid rgba(1,106,112,0.12);
+    background: #f2fbfb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .summary-card div {
+    display: flex;
+    flex-direction: column;
+    font-weight: 600;
+    color: var(--peacock-dark);
+  }
+
+  button {
+    margin-top: 24px;
+    padding: 13px 22px;
+    background: var(--peacock);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.25s;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  button:hover {
+    background: var(--peacock-dark);
+    transform: translateY(-1px);
+  }
+
+  .action-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+  }
+
+  .secondary {
+    background: rgba(3,63,66,0.2);
+    color: var(--peacock-dark);
+  }
+
+  .secondary:hover {
+    background: rgba(3,63,66,0.35);
+  }
+
+  @media(max-width: 640px){
+    .card {
+      padding: 24px;
+    }
+    .item-row {
+      grid-template-columns: 1fr;
+    }
+    .summary-card {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .top-row {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>
+
+
+</head>
+<body>
+
+<div class="card">
+
+  <div class="top-row">
+    <div>
+      <h2>New Customer — Create Order</h2>
+      <p class="subtitle">Capture customer details, choose rental items, and set the start date in one flow.</p>
+    </div>
+    <a class="back" href="home.html">← Back to dashboard</a>
+  </div>
+
+  <div class="section">
+    <div class="highlight-badge">Customer Profile</div>
+    <div class="form-grid" style="margin-top:18px">
+      <div class="field">
+        <label>Date (auto)</label>
+        <input id="date" readonly />
+      </div>
+      <div class="field">
+        <label>Customer Name *</label>
+        <input id="name" oninput="this.value=this.value.toUpperCase();" placeholder="e.g., SIVA CONSTRUCTIONS" />
+      </div>
+      <div class="field">
+        <label>Phone Number *</label>
+        <input id="phone" maxlength="10" oninput="validatePhone(this)" placeholder="Primary contact" />
+      </div>
+      <div class="field">
+        <label>Additional Phone</label>
+        <input id="alt_phone" maxlength="10" oninput="validatePhone(this)" placeholder="Optional" />
+      </div>
+    </div>
+    <div class="field" style="margin-top:18px">
+      <label>Address *</label>
+      <textarea id="address" rows="2" oninput="this.value=this.value.toUpperCase();" placeholder="Site location or delivery address"></textarea>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="highlight-badge">Select Products</div>
+    <p style="margin:12px 0 0;color:rgba(3,63,66,0.75);font-size:14px;">Tap to add items. Quantities & pricing appear below instantly.</p>
+    <div class="products" id="productsList"></div>
+
+    <div class="items-wrapper" id="itemsWrapper">
+      <div class="empty-state" id="itemsEmpty">No items added yet. Select a product to set its price and quantity.</div>
+      <div id="itemsContainer"></div>
+    </div>
+
+    <div class="summary-card">
+      <div>
+        <span style="font-size:13px; text-transform: uppercase; opacity:0.7;">Selected items</span>
+        <span id="summaryItems">0</span>
+      </div>
+      <div>
+        <span style="font-size:13px; text-transform: uppercase; opacity:0.7;">Total quantity</span>
+        <span id="summaryQty">0</span>
+      </div>
+      <div>
+        <span style="font-size:13px; text-transform: uppercase; opacity:0.7;">Rent start</span>
+        <input style="margin:0" type="datetime-local" id="rent_start" />
+      </div>
+    </div>
+  </div>
+
+  <div class="action-row">
+    <button onclick="submitForm()" style="flex:1; min-width:160px">Submit Order</button>
+    <button class="secondary" onclick="resetForm()">Reset Form</button>
+  </div>
+
+</div>
+
+
+<script src="popup.js"></script>
+<script>
+/* ------------------------------
+   AUTO SET DATE + RENT START
+------------------------------ */
+const dateInput = document.getElementById("date");
+const rentStartInput = document.getElementById("rent_start");
+
+function pad(n){ return n<10 ? "0"+n : n; }
+
+(function setAutoDate() {
+  const now = new Date();
+
+  // For display (YYYY-MM-DD)
+  dateInput.value = now.toISOString().slice(0,10);
+
+  // For datetime-local (YYYY-MM-DDTHH:mm)
+  const formatted = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+  rentStartInput.value = formatted;
+})();
+
+/* ------------------------------
+   VALIDATE PHONE = ONLY 10 DIGITS
+------------------------------ */
+function validatePhone(input){
+  input.value = input.value.replace(/[^0-9]/g, "");
+  if(input.value.length > 10){
+    input.value = input.value.slice(0,10);
+  }
+}
+
+/* ------------------------------
+   PRODUCT LIST
+------------------------------ */
+const PRODUCTS = [
+  "xframe","alige","piller box","wheels",
+  "painting ladder","motor","supportings","machine",
+  "board","poles"
+];
+
+const productsList = document.getElementById("productsList");
+const itemsContainer = document.getElementById("itemsContainer");
+const itemsEmpty = document.getElementById("itemsEmpty");
+const summaryItems = document.getElementById("summaryItems");
+const summaryQty = document.getElementById("summaryQty");
+
+// Render checkboxes
+PRODUCTS.forEach(p=>{
+  const div = document.createElement("div");
+  div.className = "product-checkbox";
+  div.innerHTML = `<input type="checkbox" onchange="toggleProduct('${p}')" id="chk_${p}"><span>${p}</span>`;
+  productsList.appendChild(div);
+});
+
+// Toggle product row
+function toggleProduct(prod){
+  const check = document.getElementById(`chk_${prod}`).checked;
+  if(check){
+    const row = document.createElement("div");
+    row.className="item-row";
+    row.id=`row_${prod}`;
+    row.innerHTML = `
+      <div><strong>${prod.toUpperCase()}</strong></div>
+      <input placeholder="Quantity" id="qty_${prod}" type="number" min="1" oninput="handleQtyChange('${prod}')" autofocus>
+      <input placeholder="Price" id="price_${prod}" type="number" min="0" step="0.01">
+      <button onclick="removeProduct('${prod}')">Remove</button>
+    `;
+    itemsContainer.appendChild(row);
+  } else {
+    removeProduct(prod);
+  }
+  updateItemsState();
+}
+
+function removeProduct(prod){
+  document.getElementById(`chk_${prod}`).checked = false;
+  const row = document.getElementById(`row_${prod}`);
+  if(row) row.remove();
+  updateItemsState();
+}
+
+function handleQtyChange(prod){
+  const input = document.getElementById(`qty_${prod}`);
+  if(!input) return;
+  if(input.value === ""){
+    updateItemsState();
+    return;
+  }
+  if(Number(input.value) < 1){
+    input.value = 1;
+  }
+  updateItemsState();
+}
+
+function updateItemsState(){
+  const selectedRows = itemsContainer.children.length;
+  itemsEmpty.style.display = selectedRows ? "none" : "block";
+
+  let totalQty = 0;
+  PRODUCTS.forEach(p=>{
+    const qtyInput = document.getElementById(`qty_${p}`);
+    if(qtyInput && document.getElementById(`chk_${p}`).checked){
+      totalQty += Number(qtyInput.value) || 0;
+    }
+  });
+
+  summaryItems.textContent = selectedRows;
+  summaryQty.textContent = totalQty;
+}
+
+/* ------------------------------
+   RESET FORM
+------------------------------ */
+function resetForm(){
+  document.getElementById("name").value="";
+  document.getElementById("phone").value="";
+  document.getElementById("alt_phone").value="";
+  document.getElementById("address").value="";
+  itemsContainer.innerHTML="";
+  PRODUCTS.forEach(p=> document.getElementById(`chk_${p}`).checked=false);
+  updateItemsState();
+}
+
+/* ------------------------------
+   SUBMIT FORM
+------------------------------ */
+async function submitForm(){
+  const name = document.getElementById("name").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const address = document.getElementById("address").value.trim();
+  const alt_phone = document.getElementById("alt_phone").value.trim();
+  const rent_start = rentStartInput.value;
+
+  if(!name || !phone || !address){
+    showPopup({
+      title: "Missing details",
+      message: "Please fill all required fields.",
+      type: "warning"
+    });
+    return;
+  }
+
+  const items = [];
+  for(const p of PRODUCTS){
+    if(document.getElementById(`chk_${p}`).checked){
+      const price = document.getElementById(`price_${p}`).value;
+      const qty = document.getElementById(`qty_${p}`).value;
+      if(price <= 0 || qty <= 0){
+        showPopup({
+          title: "Invalid item",
+          message: `Enter valid price & quantity for ${p}.`,
+          type: "error"
+        });
+        return;
+      }
+      items.push({ product:p, price, quantity:qty });
+    }
+  }
+
+  if(items.length === 0){
+    showPopup({
+      title: "No products",
+      message: "Select at least one product.",
+      type: "warning"
+    });
+    return;
+  }
+
+  const payload = {
+    name,
+    phone,
+    alt_phone,
+    address,
+    rent_start,
+    items,
+    order_date: dateInput.value
+  };
+
+  const res = await fetch("/api/new-customer", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify(payload)
+  });
+
+  const data = await res.json();
+
+  if(data.success){
+    showPopup({
+      title: "Order created",
+      message: "Redirecting to customer details...",
+      type: "success",
+      duration: 1600
+    });
+    setTimeout(()=> {
+      window.location.href = `customer_details.html?customerId=${data.customerId}`;
+    }, 900);
+  } else {
+    showPopup({
+      title: "Request failed",
+      message: data.error || "Unable to create customer.",
+      type: "error"
+    });
+  }
+}
+
+</script>
+
+</body>
+</html>

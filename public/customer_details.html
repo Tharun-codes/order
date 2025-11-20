@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Customer Details</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="popup.css" />
+<style>
+  :root {
+    --peacock: #016A70;
+    --peacock-dark: #014d50;
+    --accent: #01949A;
+    --light-bg: #EAFDFC;
+    --text: #033f42;
+    --card-bg: #ffffff;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: Inter, Arial, sans-serif;
+    margin: 0;
+    min-height: 100vh;
+    color: var(--text);
+    background: radial-gradient(circle at top left, rgba(1,106,112,0.12), transparent 45%),
+                radial-gradient(circle at bottom right, rgba(2,162,168,0.15), transparent 40%),
+                var(--light-bg);
+  }
+
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 34px 20px 60px;
+  }
+
+  .page-header {
+    background: var(--card-bg);
+    padding: 26px 30px;
+    border-radius: 20px;
+    border: 1px solid rgba(1,106,112,0.12);
+    box-shadow: 0 25px 60px rgba(1,74,77,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+  }
+
+  .page-header h2 {
+    margin: 6px 0;
+    font-size: 32px;
+    color: var(--peacock-dark);
+  }
+
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    font-size: 12px;
+    color: rgba(3,63,66,0.65);
+  }
+
+  .page-header p {
+    margin: 0;
+    color: rgba(3,63,66,0.8);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 999px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.25s ease;
+    text-decoration: none;
+    font-size: 14px;
+  }
+
+  .btn-primary {
+    background: var(--peacock);
+    color: #fff;
+    box-shadow: 0 15px 35px rgba(1,106,112,0.25);
+  }
+
+  .btn-primary:hover { background: var(--peacock-dark); transform: translateY(-1px); }
+
+  .btn-outline {
+    background: transparent;
+    border: 1px solid rgba(3,63,66,0.2);
+    color: var(--peacock-dark);
+  }
+
+  .btn-outline:hover { background: rgba(3,63,66,0.05); }
+
+  .btn-danger {
+    background: #d94444;
+    color: #fff;
+  }
+
+  .btn-danger:hover { background: #bd2f2f; }
+
+  .layout {
+    margin-top: 28px;
+    display: grid;
+    grid-template-columns: minmax(280px, 330px) 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  .panel {
+    background: var(--card-bg);
+    border-radius: 18px;
+    border: 1px solid rgba(1,106,112,0.12);
+    box-shadow: 0 18px 48px rgba(1,74,77,0.08);
+    padding: 22px 24px;
+  }
+
+  .panel h3 {
+    margin: 0 0 12px;
+    color: var(--peacock-dark);
+  }
+
+  #searchBox {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid #dfeff0;
+    font-size: 15px;
+  }
+
+  #results {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 540px;
+    overflow-y: auto;
+  }
+
+  .customer-card {
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid #e0f1f0;
+    background: #fff;
+    cursor: pointer;
+    transition: 0.2s ease;
+  }
+
+  .customer-card:hover {
+    box-shadow: 0 18px 35px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+  }
+
+  .customer-card-active { border-left: 5px solid #08b87c; }
+  .customer-card-returned { border-left: 5px solid #889397; }
+  .customer-card-overdue { border-left: 5px solid #ff5959; }
+  .customer-card-none { border-left: 5px solid #bfcaca; }
+
+  .customer-info-small {
+    margin-top: 6px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #5b7a7b;
+  }
+
+  .status-chip {
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .status-active { background: #ccf5e6; color: #08885a; }
+  .status-returned { background: #e4e8e9; color: #5b6163; }
+  .status-overdue { background: #ffe0e0; color: #b20000; }
+  .status-none { background: #eef5f5; color: #7d8d8d; }
+
+  #detailsMode {
+    display: none;
+  }
+
+  .detail-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .detail-header h3 {
+    margin: 0;
+    font-size: 26px;
+  }
+
+  .field-grid {
+    display: grid;
+    gap: 14px;
+  }
+
+  .info {
+    margin: 8px 0;
+    font-size: 15px;
+  }
+
+  .label {
+    font-weight: 600;
+    color: var(--peacock-dark);
+    margin-right: 6px;
+  }
+
+  select {
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #dfeff0;
+    font-size: 15px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+  }
+
+  th {
+    background: #dff5f4;
+    padding: 12px;
+    text-align: left;
+    color: var(--peacock-dark);
+    font-weight: 700;
+  }
+
+  td {
+    padding: 12px;
+    border-bottom: 1px solid #eef8f7;
+  }
+
+  ul#productsList {
+    margin-top: 14px;
+    padding-left: 20px;
+    color: #234;
+  }
+
+  .edit-area {
+    margin-top: 18px;
+    padding: 18px;
+    border-radius: 16px;
+    border: 1px solid #cfeeee;
+    background: #f7ffff;
+  }
+
+  .row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 10px;
+  }
+
+  .row input {
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #dbe;
+  }
+
+  .row .prod { flex: 1; }
+  .row .small { width: 140px; }
+  .row .qty { width: 110px; }
+
+  .row .remove {
+    background: #f44336;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+  }
+
+  .muted {
+    color: rgba(3,63,66,0.6);
+    font-size: 13px;
+  }
+
+  .hidden { display: none; }
+
+  @media(max-width: 860px){
+    .layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media(max-width: 600px){
+    .page-header {
+      flex-direction: column;
+    }
+    .row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Customers</p>
+        <h2>Customer Details</h2>
+        <p>View profiles, inspect historical orders, and update the most recent rental in one streamlined workspace.</p>
+      </div>
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <a class="btn btn-outline" href="home.html">← Back to dashboard</a>
+        <button id="btnDelete" class="btn btn-danger hidden">Delete</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <section class="panel">
+        <div id="searchMode">
+          <h3>All Customers</h3>
+          <p class="muted">Search by name or phone to open a record.</p>
+          <input id="searchBox" placeholder="Search name or phone..." onkeyup="searchCustomers()">
+          <div id="results"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div id="detailsMode">
+          <div class="detail-header">
+            <div>
+              <h3 id="custName"></h3>
+              <div class="info"><span class="label">Phone:</span><span id="custPhone"></span></div>
+              <div class="info"><span class="label">Address:</span><span id="custAddress"></span></div>
+            </div>
+            <button id="btnEditLast" class="btn btn-primary">Edit Last Order</button>
+          </div>
+
+          <div style="display:flex;gap:14px;align-items:center;margin-top:14px;flex-wrap:wrap;">
+            <div>
+              <label class="label">Rent Status</label>
+              <select id="statusDropdown" onchange="updateStatus()">
+                <option value="ACTIVE">ACTIVE 🟢</option>
+                <option value="RETURNED">RETURNED 🔵</option>
+                <option value="OVERDUE">OVERDUE 🔴</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="editArea" class="edit-area hidden">
+            <div class="field-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;">
+              <div>
+                <label class="label">Order Date</label>
+                <input type="date" id="orderDate" />
+              </div>
+              <div>
+                <label class="label">Rent Start</label>
+                <input type="date" id="rentStart" />
+              </div>
+              <div>
+                <label class="label">Rent End</label>
+                <input type="date" id="rentEnd" />
+              </div>
+            </div>
+
+            <div id="itemsEditor" style="margin-top:14px;">
+              <!-- rows appended here -->
+            </div>
+
+            <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+              <button id="btnAddRow" class="btn btn-outline">+ Add Item</button>
+              <button id="btnSaveOrder" class="btn btn-primary">Save Order</button>
+              <div style="margin-left:auto;font-weight:700;">Total: <span id="editTotal">₹ 0.00</span></div>
+            </div>
+          </div>
+
+          <h3 style="margin-top:24px;">Orders</h3>
+          <table>
+            <thead>
+              <tr><th>Date</th><th>Rent Start</th><th>Total</th></tr>
+            </thead>
+            <tbody id="ordersBody"></tbody>
+          </table>
+
+          <h3 style="margin-top:24px;">Products Ordered (from last order)</h3>
+          <ul id="productsList"></ul>
+        </div>
+      </section>
+    </div>
+  </div>
+
+<script src="popup.js"></script>
+<script>
+/* helper */
+function $id(id){ return document.getElementById(id); }
+function safeNumber(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
+let currentCustomerId = null;
+let currentLastOrder = null; // object { order: {...}, items: [...] }
+let customersCache = [];
+
+/* -------------------------
+   Load single customer details
+   ------------------------- */
+async function loadCustomerDetails(id){
+  currentCustomerId = id;
+  try {
+    const res = await fetch('/api/customer-details?id=' + encodeURIComponent(id));
+    const data = await res.json();
+    if(!data.success){
+      showPopup({
+        title: "Load failed",
+        message: "Could not load customer.",
+        type: "error"
+      });
+      return;
+    }
+
+    // show delete button now that a customer is selected
+    $id('btnDelete').classList.remove('hidden');
+
+    // hide list, show details
+    $id('searchMode').style.display = 'none';
+    $id('detailsMode').style.display = 'block';
+
+    const cust = data.customer;
+    $id('custName').textContent = (cust.name || '').toUpperCase();
+    $id('custPhone').textContent = cust.phone || '';
+    $id('custAddress').textContent = (cust.address || '').toUpperCase();
+
+    // rent status
+    $id('statusDropdown').value = cust.rent_status || 'ACTIVE';
+
+    // orders -> display all (but editor edits only last)
+    const ordersBody = $id('ordersBody');
+    ordersBody.innerHTML = '';
+    data.orderDetails.forEach(o => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${o.order.order_date}</td><td>${o.order.rent_start || '-'}</td><td>₹ ${Number(o.order.total || 0).toFixed(2)}</td>`;
+      ordersBody.appendChild(tr);
+    });
+
+    // last entry = latest created => first element in array (we used ORDER BY id DESC server-side)
+    if(data.orderDetails.length > 0){
+      currentLastOrder = data.orderDetails[0];
+    } else {
+      currentLastOrder = null;
+    }
+
+    // show products list (from last order)
+    const prodList = $id('productsList');
+    prodList.innerHTML = '';
+    if(currentLastOrder && currentLastOrder.items && currentLastOrder.items.length){
+      currentLastOrder.items.forEach(it => {
+        const li = document.createElement('li');
+        li.textContent = `${it.product} — ${it.quantity} x ₹${Number(it.price).toFixed(2)}`;
+        prodList.appendChild(li);
+      });
+    } else {
+      prodList.innerHTML = '<li class="muted">No products found for last order</li>';
+    }
+
+    // prepare edit area with last order data
+    prepareEditArea();
+
+  } catch(err){
+    console.error(err);
+    showPopup({
+      title: "Network error",
+      message: "Error loading customer details.",
+      type: "error"
+    });
+  }
+}
+
+/* -------------------------
+   Load all customers list
+   ------------------------- */
+async function loadAllCustomers(){
+  try {
+    const res = await fetch('/api/customers?q=');
+    const data = await res.json();
+    customersCache = data.rows || [];
+    renderCustomerList(customersCache);
+    // hide delete button on list view
+    $id('btnDelete').classList.add('hidden');
+    $id('searchMode').style.display = 'block';
+    $id('detailsMode').style.display = 'none';
+  } catch(err){
+    console.error(err);
+    showPopup({
+      title: "Network error",
+      message: "Error loading customers.",
+      type: "error"
+    });
+  }
+}
+function renderCustomerList(list){
+  const box = $id('results');
+  box.innerHTML = '';
+  if(!list.length) {
+    box.innerHTML = '<div class="item muted">No customers</div>';
+    return;
+  }
+
+  list.forEach(c => {
+
+    // status class
+    let cardClass = "customer-card-none";
+    let statusText = "—";
+    if (c.rent_status === "ACTIVE") { cardClass = "customer-card-active"; statusText = "ACTIVE"; }
+    if (c.rent_status === "RETURNED") { cardClass = "customer-card-returned"; statusText = "RETURNED"; }
+    if (c.rent_status === "OVERDUE") { cardClass = "customer-card-overdue"; statusText = "OVERDUE"; }
+
+    const rentDate = c.rent_start ? new Date(c.rent_start).toLocaleDateString("en-IN") : "—";
+
+    const div = document.createElement('div');
+    div.className = `customer-card ${cardClass}`;
+    div.innerHTML = `
+      <strong>${(c.name||'').toUpperCase()}</strong> — ${c.phone || ''}
+      <div class="customer-info-small">
+          <span>📅 ${rentDate}</span>
+          <span class="status-chip status-${statusText.toLowerCase()}">${statusText}</span>
+      </div>
+    `;
+    div.onclick = () => { window.location.href = `customer_details.html?customerId=${c.id}`; };
+    box.appendChild(div);
+  });
+}
+
+
+
+/* -------------------------
+   Search
+   ------------------------- */
+async function searchCustomers(){
+  const q = $id('searchBox').value.trim();
+  try {
+    const res = await fetch('/api/customers?q=' + encodeURIComponent(q));
+    const data = await res.json();
+    renderCustomerList(data.rows || []);
+  } catch(err){ console.error(err); }
+}
+
+/* -------------------------
+   RENT STATUS update
+   ------------------------- */
+async function updateStatus(){
+  const status = $id('statusDropdown').value;
+  if(!currentCustomerId) return;
+  try {
+    const res = await fetch('/api/update-status', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ customerId: currentCustomerId, status })
+    });
+    const d = await res.json();
+    if(!d.success){
+      showPopup({
+        title: "Update failed",
+        message: "Could not update status.",
+        type: "error"
+      });
+    } else {
+      showPopup({
+        title: "Status updated",
+        message: "Customer rent status saved.",
+        type: "success",
+        duration: 2000
+      });
+    }
+  } catch(err){
+    console.error(err);
+    showPopup({
+      title: "Network error",
+      message: "Status update failed.",
+      type: "error"
+    });
+  }
+}
+
+/* -------------------------
+   EDIT LAST ORDER UI
+   ------------------------- */
+const editArea = $id('editArea');
+const itemsEditor = $id('itemsEditor');
+const btnEditLast = $id('btnEditLast');
+const btnAddRow = $id('btnAddRow');
+const btnSaveOrder = $id('btnSaveOrder');
+const editTotalEl = $id('editTotal');
+
+function prepareEditArea(){
+  // If there's no last order, show empty editor with ability to create rows
+  if(!currentLastOrder){
+    $id('orderDate').value = new Date().toISOString().split('T')[0];
+    $id('rentStart').value = '';
+    $id('rentEnd').value = '';
+  } else {
+    // order_date might be YYYY-MM-DD or ISO -> try extract date portion
+    const od = currentLastOrder.order.order_date ? currentLastOrder.order.order_date.split('T')[0] : '';
+    $id('orderDate').value = od;
+    $id('rentStart').value = currentLastOrder.order.rent_start ? currentLastOrder.order.rent_start.split('T')[0] : '';
+    $id('rentEnd').value = currentLastOrder.order.rent_end ? currentLastOrder.order.rent_end.split('T')[0] : '';
+  }
+
+  // clear items editor
+  itemsEditor.innerHTML = '';
+  const items = (currentLastOrder && currentLastOrder.items) ? currentLastOrder.items : [];
+  if(items.length){
+    items.forEach(it => addEditorRow(it.product, it.price, it.quantity));
+  } else {
+    // add one empty row
+    addEditorRow('', 0, 1);
+  }
+  recalcEditTotal();
+}
+
+btnEditLast.addEventListener('click', ()=>{
+  editArea.classList.toggle('hidden');
+  // ensure editor is prepared
+  if(!editArea.classList.contains('hidden')) prepareEditArea();
+});
+
+btnAddRow.addEventListener('click', (e)=>{
+  e.preventDefault();
+  addEditorRow('', 0, 1);
+  recalcEditTotal();
+});
+
+/* create a single editor row */
+function addEditorRow(product = '', price = 0, qty = 1){
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.innerHTML = `
+    <input class="prod" placeholder="Product name" value="${escapeHtml(product)}" />
+    <input class="small" type="number" step="0.01" min="0" value="${Number(price)}" />
+    <input class="qty" type="number" step="1" min="1" value="${Number(qty)}" />
+    <button class="remove">Remove</button>
+  `;
+  // remove handler
+  row.querySelector('.remove').addEventListener('click', ()=>{
+    row.remove();
+    recalcEditTotal();
+  });
+  // recalc when values change
+  row.querySelector('.small').addEventListener('input', recalcEditTotal);
+  row.querySelector('.qty').addEventListener('input', recalcEditTotal);
+  itemsEditor.appendChild(row);
+}
+
+/* sum the amounts */
+function recalcEditTotal(){
+  let total = 0;
+  Array.from(itemsEditor.querySelectorAll('.row')).forEach(r=>{
+    const p = safeNumber(r.querySelector('.small').value);
+    const q = safeNumber(r.querySelector('.qty').value);
+    total += p * q;
+  });
+  editTotalEl.textContent = `₹ ${total.toFixed(2)}`;
+}
+
+/* -------------------------
+   Save edited order -> POST /api/update-order
+   ------------------------- */
+btnSaveOrder.addEventListener('click', async ()=>{
+  if(!currentLastOrder || !currentLastOrder.order || !currentLastOrder.order.id){
+    showPopup({
+      title: "No order",
+      message: "No order selected to update.",
+      type: "warning"
+    });
+    return;
+  }
+  const orderId = currentLastOrder.order.id;
+  // collect items
+  const rows = Array.from(itemsEditor.querySelectorAll('.row'));
+  const items = rows.map(r => {
+    return {
+      product: r.querySelector('.prod').value.trim(),
+      price: Number(r.querySelector('.small').value) || 0,
+      quantity: Number(r.querySelector('.qty').value) || 0
+    };
+  }).filter(i => i.product && i.quantity > 0);
+
+  if(items.length === 0){
+    showPopup({
+      title: "Missing items",
+      message: "Add at least one valid product (name, qty>0).",
+      type: "warning"
+    });
+    return;
+  }
+
+  const payload = {
+    orderId,
+    order_date: $id('orderDate').value || null,
+    rent_start: $id('rentStart').value || null,
+    rent_end: $id('rentEnd').value || null,
+    items
+  };
+
+  try {
+    btnSaveOrder.disabled = true;
+    btnSaveOrder.textContent = 'Saving...';
+    const res = await fetch('/api/update-order', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const d = await res.json();
+    if(d.success){
+      showPopup({
+        title: "Order saved",
+        message: "Order updated successfully.",
+        type: "success"
+      });
+      // reload details to reflect saved data
+      await loadCustomerDetails(currentCustomerId);
+      // close editor
+      editArea.classList.add('hidden');
+    } else {
+      showPopup({
+        title: "Save failed",
+        message: d.error || 'Failed to update order.',
+        type: "error"
+      });
+    }
+  } catch(err){
+    console.error(err);
+    showPopup({
+      title: "Server error",
+      message: "Server error updating order.",
+      type: "error"
+    });
+  } finally {
+    btnSaveOrder.disabled = false;
+    btnSaveOrder.textContent = 'Save Order';
+  }
+});
+
+/* -------------------------
+   Delete customer (visible only in details)
+   ------------------------- */
+$id('btnDelete').addEventListener('click', async ()=>{
+  if(!currentCustomerId) return;
+  const confirmed = await showConfirmPopup({
+    title: "Delete customer?",
+    message: "This will remove the customer and all orders. This cannot be undone.",
+    confirmText: "Delete",
+    cancelText: "Cancel",
+    variant: "danger"
+  });
+  if(!confirmed) return;
+  try {
+    const res = await fetch('/api/delete-customer', {
+      method:'DELETE',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ customerId: currentCustomerId })
+    });
+    const d = await res.json();
+    if(d.success){
+      showPopup({
+        title: "Customer deleted",
+        message: "Record removed successfully.",
+        type: "success"
+      });
+      // go back to list
+      location.href = 'customer_details.html';
+    } else {
+      showPopup({
+        title: "Delete failed",
+        message: d.error || 'Could not delete customer.',
+        type: "error"
+      });
+    }
+  } catch(err){
+    console.error(err);
+    showPopup({
+      title: "Server error",
+      message: "Error deleting customer.",
+      type: "error"
+    });
+  }
+});
+
+/* -------------------------
+   Utils
+   ------------------------- */
+function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
+
+function getCustomerId(){
+  return new URLSearchParams(window.location.search).get('customerId');
+}
+
+/* -------------------------
+   On load
+   ------------------------- */
+(async function init(){
+  const id = getCustomerId();
+  if(!id) {
+    await loadAllCustomers();
+  } else {
+    await loadCustomerDetails(id);
+  }
+
+  // recalc when editor inputs change (catch delegated events)
+  itemsEditor.addEventListener('input', recalcEditTotal);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,977 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Generate Bill</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="popup.css" />
+  <style>
+  :root {
+    --peacock: #016A70;
+    --peacock-dark: #014d50;
+    --accent: #02A2A8;
+    --light-bg: #F5FEFF;
+    --text: #023c3f;
+    --card-bg: #ffffff;
+    --border: #d9efef;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: Inter, Arial, sans-serif;
+    background: radial-gradient(circle at top left, rgba(1,106,112,0.12), transparent 45%),
+                radial-gradient(circle at bottom right, rgba(2,162,168,0.15), transparent 40%),
+                var(--light-bg);
+    min-height: 100vh;
+    margin: 0;
+    color: var(--text);
+  }
+
+  .muted {
+    color: rgba(3,63,66,0.65);
+    font-size: 13px;
+  }
+
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 20px 50px;
+  }
+
+  .page-header {
+    background: var(--card-bg);
+    padding: 28px;
+    border-radius: 18px;
+    border: 1px solid rgba(1,106,112,0.14);
+    box-shadow: 0 28px 60px rgba(1, 74, 77, 0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+  }
+
+  .page-header h1 {
+    margin: 4px 0 6px;
+    color: var(--peacock-dark);
+    font-size: 32px;
+  }
+
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    font-size: 12px;
+    color: rgba(3,63,66,0.6);
+  }
+
+  .page-header p {
+    margin: 0;
+    color: rgba(3,63,66,0.8);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.25s ease;
+    text-decoration: none;
+  }
+
+  .btn-primary {
+    background: var(--peacock);
+    color: #fff;
+    box-shadow: 0 15px 30px rgba(1,106,112,0.25);
+  }
+
+  .btn-primary:hover {
+    background: var(--peacock-dark);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    background: rgba(3,63,66,0.14);
+    color: var(--peacock-dark);
+  }
+
+  .btn-secondary:hover {
+    background: rgba(3,63,66,0.22);
+  }
+
+  .section-card {
+    margin-top: 28px;
+    background: var(--card-bg);
+    border-radius: 18px;
+    border: 1px solid rgba(1,106,112,0.12);
+    box-shadow: 0 24px 50px rgba(1, 74, 77, 0.08);
+    padding: 24px 26px;
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .badge {
+    background: rgba(2,162,168,0.12);
+    color: var(--peacock-dark);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.03em;
+  }
+
+  .section-header p {
+    margin: 0;
+    color: rgba(3,63,66,0.7);
+    font-size: 14px;
+  }
+
+  label {
+    display: block;
+    font-weight: 600;
+    color: var(--peacock-dark);
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+
+  .search-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid #cfe5e6;
+    border-radius: 14px;
+    background: #fff;
+    transition: box-shadow 0.2s ease, border 0.2s ease;
+  }
+
+  .search-field:focus-within {
+    border-color: var(--peacock);
+    box-shadow: 0 0 0 3px rgba(1,106,112,0.12);
+  }
+
+  .search-field input {
+    flex: 1;
+    border: none;
+    padding: 0;
+    font-size: 15px;
+  }
+
+  .search-field input:focus {
+    box-shadow: none;
+  }
+
+  .search-icon {
+    font-size: 18px;
+    color: rgba(3,63,66,0.7);
+  }
+
+  .clear-search {
+    border: none;
+    background: rgba(1,106,112,0.08);
+    color: var(--peacock-dark);
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .clear-search.visible {
+    display: inline-flex;
+  }
+
+  .clear-search:hover {
+    background: rgba(1,106,112,0.18);
+  }
+
+  .search-meta {
+    margin-top: 8px;
+  }
+
+  input,
+  textarea,
+  select {
+    width: 100%;
+    padding: 13px 14px;
+    border-radius: 12px;
+    border: 1px solid #cfe5e6;
+    font-size: 15px;
+    background: #fff;
+    transition: 0.2s ease;
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    border-color: var(--peacock);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(1,106,112,0.15);
+  }
+
+  .field-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 18px;
+  }
+
+  .products {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .product-checkbox {
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid #c0dadb;
+    background: #f8ffff;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--peacock-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: 0.2s;
+  }
+
+  .product-checkbox input {
+    width: auto;
+    margin: 0;
+  }
+
+  .product-checkbox:hover {
+    border-color: var(--peacock);
+    background: #eafcfc;
+    transform: translateY(-1px);
+  }
+
+  #itemsContainer {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .item-row {
+    display: grid;
+    grid-template-columns: minmax(150px, 1fr) repeat(2, 140px) 110px;
+    gap: 12px;
+    background: #f4ffff;
+    border: 1px solid #cfeeee;
+    border-radius: 14px;
+    padding: 14px 16px;
+    align-items: center;
+  }
+
+  .item-row strong {
+    letter-spacing: 0.05em;
+  }
+
+  .item-row input {
+    width: 100%;
+  }
+
+  .item-row button {
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: rgba(3,63,66,0.15);
+    color: var(--peacock-dark);
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .item-row button:hover {
+    background: rgba(3,63,66,0.3);
+  }
+
+  .actions {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+  }
+
+  .actions .btn {
+    flex: 1;
+    min-width: 180px;
+    justify-content: center;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: #4a5b5c;
+    border: 1px solid rgba(3,63,66,0.2);
+  }
+
+  #billPreview {
+    margin-top: 24px;
+    padding: 24px;
+    border-radius: 18px;
+    background: #f4ffff;
+    border: 1px dashed rgba(1,106,112,0.4);
+    display: none;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 18px;
+  }
+
+  th,
+  td {
+    border: 1px solid #dceeee;
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  th {
+    background: #e1f6f4;
+    color: var(--peacock-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  #searchResults {
+    border: 1px solid #c3e2e2;
+    border-radius: 12px;
+    padding: 6px;
+    background: #fff;
+    max-height: 240px;
+    overflow-y: auto;
+    margin-top: 8px;
+    display: none;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+  }
+
+  .sr-item {
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    transition: background 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sr-item:hover {
+    background: #eafdfd;
+  }
+
+  .sr-item.active {
+    background: #dff7f7;
+    box-shadow: inset 0 0 0 1px rgba(1,106,112,0.25);
+  }
+
+  .sr-item mark {
+    background: #fff3cd;
+    color: var(--peacock-dark);
+    padding: 0 2px;
+    border-radius: 3px;
+  }
+
+  @media(max-width: 720px){
+    .page-header {
+      flex-direction: column;
+    }
+    .item-row {
+      grid-template-columns: 1fr;
+    }
+    .actions .btn {
+      flex: unset;
+      width: 100%;
+    }
+  }
+  </style>
+
+</head>
+<body>
+  <div class="page">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Billing</p>
+        <h1>Generate Bill</h1>
+        <p>Fetch an existing customer or enter details manually, then preview and download a polished invoice.</p>
+      </div>
+      <a class="btn btn-secondary" href="home.html">← Back to dashboard</a>
+    </header>
+
+    <section class="section-card">
+      <div class="section-header">
+        <span class="badge">Find customer</span>
+        <p>Search existing customers to auto-fill details.</p>
+      </div>
+      <label>Search Customer by name</label>
+      <div class="search-field" id="searchField">
+        <span class="search-icon">🔍</span>
+        <input id="searchName" type="text" placeholder="Type at least one letter..." autocomplete="off" />
+        <button type="button" id="clearSearch" class="clear-search" aria-label="Clear search">×</button>
+      </div>
+      <div class="search-meta muted" id="searchMeta"></div>
+      <div id="searchResults"></div>
+    </section>
+
+    <section class="section-card">
+      <div class="section-header">
+        <span class="badge">Customer details</span>
+        <p>Fields marked * are required to create the bill.</p>
+      </div>
+      <div class="field-grid">
+        <div>
+          <label>Customer Name *</label>
+          <input type="text" id="customerName" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
+        </div>
+        <div>
+          <label>Phone *</label>
+          <input type="text" id="phone" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0,10);" required>
+        </div>
+        <div>
+          <label>Additional Phone</label>
+          <input type="text" id="altPhone" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0,10);">
+        </div>
+      </div>
+      <div style="margin-top:16px;">
+        <label>Address *</label>
+        <textarea id="address" rows="2" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required></textarea>
+      </div>
+    </section>
+
+    <section class="section-card">
+      <div class="section-header">
+        <span class="badge">Products</span>
+        <p>Select products and define their price & quantity.</p>
+      </div>
+      <div id="productsList" class="products"></div>
+      <div id="itemsContainer"></div>
+      <div class="field-grid" style="margin-top:22px;">
+        <div>
+          <label>Rent Start</label>
+          <input type="date" id="rent_start" />
+        </div>
+        <div>
+          <label>Rent End</label>
+          <input type="date" id="rent_end" />
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card">
+      <div class="section-header">
+        <span class="badge">Finalize</span>
+        <p>Generate a preview before downloading the bill.</p>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" id="btnPreview">Generate Preview</button>
+        <button class="btn btn-primary" id="btnDownload" style="background: var(--peacock-dark); box-shadow:none;">Download Bill</button>
+        <button class="btn btn-ghost" id="btnReset">Reset Form</button>
+      </div>
+      <div id="billPreview"></div>
+    </section>
+  </div>
+
+<script src="popup.js"></script>
+<script>
+  function val(id) {
+    const el = document.getElementById(id);
+    return el ? el.value : "";
+}
+
+  // ---------- CONFIG ----------
+  const PRODUCTS = [
+    "xframe","alige","piller box","wheels",
+    "painting ladder","motor","supportings","machine",
+    "board","poles"
+  ];
+  const productsList = document.getElementById('productsList');
+  const itemsContainer = document.getElementById('itemsContainer');
+  const searchInput = document.getElementById('searchName');
+  const searchResults = document.getElementById('searchResults');
+  const clearSearchBtn = document.getElementById('clearSearch');
+  const searchMeta = document.getElementById('searchMeta');
+  const previewBox = document.getElementById('billPreview');
+  let savedPayload = null; // used by download button
+  let searchController = null;
+  let currentResults = [];
+  let activeResultIndex = -1;
+  let lastQuery = '';
+
+  searchMeta.textContent = 'Type at least one letter to search customers.';
+
+  // populate product checkboxes
+  PRODUCTS.forEach(p=>{
+    const div = document.createElement('div');
+    div.className = 'product-checkbox';
+    div.innerHTML = `<label style="margin:0;cursor:pointer"><input type="checkbox" id="chk_${p}" /> ${p}</label>`;
+    productsList.appendChild(div);
+    // click toggles checkbox and row
+    div.addEventListener('click', (e)=>{
+      if (e.target.tagName === 'INPUT') return; // checkbox handled
+      const chk = document.getElementById(`chk_${p}`);
+      chk.checked = !chk.checked;
+      toggleProductRow(p, chk.checked);
+    });
+    // listen change on checkbox
+    div.querySelector('input').addEventListener('change', (ev)=>{
+      toggleProductRow(p, ev.target.checked);
+    });
+  });
+
+  function toggleProductRow(prod, isChecked){
+    if (isChecked) {
+      if (document.getElementById(`row_${prod}`)) return;
+      const row = document.createElement('div');
+      row.className = 'item-row';
+      row.id = `row_${prod}`;
+      row.innerHTML = `
+        <div style="flex:1"><strong>${prod}</strong></div>
+        <input placeholder="Quantity" id="qty_${prod}" type="number" min="1" />
+        <input placeholder="Price" id="price_${prod}" type="number" min="0" step="0.01" />
+        <div><button type="button" onclick="removeProduct('${prod}')">Remove</button></div>
+      `;
+      itemsContainer.appendChild(row);
+    } else {
+      const r = document.getElementById(`row_${prod}`);
+      if (r) r.remove();
+      const chk = document.getElementById(`chk_${prod}`);
+      if (chk) chk.checked = false;
+    }
+  }
+
+  function removeProduct(prod){
+    const chk = document.getElementById(`chk_${prod}`);
+    if (chk) chk.checked = false;
+    const r = document.getElementById(`row_${prod}`);
+    if (r) r.remove();
+  }
+
+  // ---------- LIVE SEARCH ----------
+  searchInput.addEventListener('input', handleSearchInput);
+  searchInput.addEventListener('keydown', handleSearchKeydown);
+  clearSearchBtn.addEventListener('click', ()=>{
+    searchInput.value = '';
+    searchInput.focus();
+    abortSearch();
+    hideSearchResults();
+    setSearchStatus('Type at least one letter to search customers.');
+    updateClearButton();
+  });
+  searchResults.addEventListener('mouseleave', ()=> setActiveItem(-1));
+
+  function handleSearchInput(){
+    const q = searchInput.value.trim();
+    updateClearButton();
+    if(!q){
+      abortSearch();
+      hideSearchResults();
+      setSearchStatus('Type at least one letter to search customers.');
+      return;
+    }
+    lastQuery = q;
+    setSearchStatus(`Searching for "${q}"...`);
+    showSearchMessage('Searching...');
+    fetchCustomersFast(q);
+  }
+
+  async function fetchCustomersFast(query){
+    abortSearch();
+    searchController = new AbortController();
+    const signal = searchController.signal;
+    showSearchMessage('Searching...');
+    try {
+      const res = await fetch('/api/customers?q=' + encodeURIComponent(query), { signal });
+      if(!res.ok) throw new Error('Network error');
+      const data = await res.json();
+      if(signal.aborted) return;
+      if(!data || !Array.isArray(data.rows) || data.rows.length === 0){
+        showSearchMessage('No results');
+        setSearchStatus(`No matches for "${query}"`);
+        return;
+      }
+      renderSearchResults(data.rows, query);
+    } catch(err){
+      if(err.name === 'AbortError') return;
+      console.error(err);
+      showSearchMessage('Unable to fetch results');
+      setSearchStatus('Unable to fetch results. Retry.');
+    }
+  }
+
+  function renderSearchResults(rows, query){
+    currentResults = rows;
+    activeResultIndex = -1;
+    searchResults.style.display = 'block';
+    searchResults.innerHTML = rows.map((r, idx) => `
+      <div class="sr-item" data-id="${r.id}" data-index="${idx}">
+        <div><strong>${highlightMatch(r.name || 'Unknown', query)}</strong></div>
+        <div class="muted">${highlightMatch(r.phone || '—', query)}</div>
+      </div>
+    `).join('');
+    searchResults.querySelectorAll('.sr-item').forEach(el=>{
+      el.addEventListener('click', ()=> selectCustomer(el.getAttribute('data-id')));
+      el.addEventListener('mouseenter', ()=> setActiveItem(Number(el.getAttribute('data-index'))));
+    });
+    setSearchStatus(`${rows.length} result${rows.length === 1 ? '' : 's'} found`);
+  }
+
+  // escape helper
+  function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
+
+  function escapeRegExp(str){
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function highlightMatch(text, query){
+    const safe = escapeHtml(text || '');
+    if(!query) return safe;
+    try {
+      const regex = new RegExp(escapeRegExp(query), 'ig');
+      return safe.replace(regex, match => `<mark>${match}</mark>`);
+    } catch (err) {
+      return safe;
+    }
+  }
+
+  function abortSearch(){
+    if(searchController){
+      searchController.abort();
+      searchController = null;
+    }
+  }
+
+  function hideSearchResults(){
+    searchResults.style.display = 'none';
+    searchResults.innerHTML = '';
+    currentResults = [];
+    activeResultIndex = -1;
+  }
+
+  function showSearchMessage(text){
+    searchResults.style.display = 'block';
+    searchResults.innerHTML = `<div class="muted">${text}</div>`;
+    currentResults = [];
+    activeResultIndex = -1;
+  }
+
+  function setSearchStatus(text){
+    searchMeta.textContent = text || '';
+  }
+
+  function updateClearButton(){
+    if(searchInput.value.trim()){
+      clearSearchBtn.classList.add('visible');
+    } else {
+      clearSearchBtn.classList.remove('visible');
+    }
+  }
+
+  function setActiveItem(index){
+    const items = searchResults.querySelectorAll('.sr-item');
+    if(!items.length){
+      activeResultIndex = -1;
+      return;
+    }
+    items.forEach(el => el.classList.remove('active'));
+    if(index < 0){
+      activeResultIndex = -1;
+      return;
+    }
+    const bounded = (index + items.length) % items.length;
+    const target = items[bounded];
+    if(target){
+      target.classList.add('active');
+      target.scrollIntoView({block:'nearest'});
+      activeResultIndex = bounded;
+    }
+  }
+
+  function handleSearchKeydown(e){
+    if(e.key === 'Escape'){
+      if(searchInput.value.trim()){
+        e.preventDefault();
+        clearSearchBtn.click();
+      }
+      return;
+    }
+    if(!currentResults.length || searchResults.style.display !== 'block') return;
+    if(e.key === 'ArrowDown'){
+      e.preventDefault();
+      setActiveItem(activeResultIndex + 1);
+    } else if(e.key === 'ArrowUp'){
+      e.preventDefault();
+      setActiveItem(activeResultIndex - 1 < 0 ? currentResults.length - 1 : activeResultIndex - 1);
+    } else if(e.key === 'Enter'){
+      const activeEl = searchResults.querySelector('.sr-item.active') || searchResults.querySelector('.sr-item[data-id]');
+      if(activeEl){
+        e.preventDefault();
+        selectCustomer(activeEl.getAttribute('data-id'));
+      }
+    }
+  }
+
+  // ---------- SELECT CUSTOMER ----------
+  async function selectCustomer(id){
+    try {
+      const res = await fetch('/api/customer-details?id=' + encodeURIComponent(id));
+      const data = await res.json();
+      if (!data.success) {
+        showPopup({
+          title: "Load failed",
+          message: "Could not load customer.",
+          type: "error"
+        });
+        return;
+      }
+      const c = data.customer;
+      document.getElementById('customerName').value = c.name || '';
+      document.getElementById('phone').value = c.phone || '';
+      document.getElementById('altPhone').value = c.alt_phone || '';
+      document.getElementById('address').value = c.address || '';
+
+      searchResults.style.display = 'none';
+      setActiveItem(-1);
+      currentResults = [];
+      setSearchStatus('Customer loaded from search.');
+      // load most recent order items automatically if present
+      if (data.orderDetails && data.orderDetails.length) {
+        const last = data.orderDetails[0];
+        // reset product rows
+        PRODUCTS.forEach(p => {
+          const chk = document.getElementById(`chk_${p}`);
+          if (chk) chk.checked = false;
+          const row = document.getElementById(`row_${p}`);
+          if (row) row.remove();
+        });
+        // set rent dates if present
+        if (last.order) {
+          if (last.order.rent_start) document.getElementById('rent_start').value = last.order.rent_start.split('T')[0];
+          if (last.order.rent_end) document.getElementById('rent_end').value = last.order.rent_end.split('T')[0];
+        }
+        // fill items
+        (last.items || []).forEach(it => {
+          const prod = it.product;
+          const chk = document.getElementById(`chk_${prod}`);
+          if (chk) chk.checked = true;
+          toggleProductRow(prod, true);
+          const priceEl = document.getElementById(`price_${prod}`);
+          const qtyEl = document.getElementById(`qty_${prod}`);
+          if (priceEl) priceEl.value = Number(it.price);
+          if (qtyEl) qtyEl.value = Number(it.quantity);
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      showPopup({
+        title: "Network error",
+        message: "Error loading customer.",
+        type: "error"
+      });
+    }
+  }
+
+  // ---------- PREVIEW ----------
+  document.getElementById('btnPreview').addEventListener('click', generatePreview);
+
+  function collectItemsFromUI(){
+    const items = [];
+    for (const p of PRODUCTS){
+      const chk = document.getElementById(`chk_${p}`);
+      if (chk && chk.checked){
+        const price = parseFloat(document.getElementById(`price_${p}`).value || 0);
+        const qty = parseInt(document.getElementById(`qty_${p}`).value || 0, 10);
+        if (!isFinite(price) || price <= 0 || !Number.isInteger(qty) || qty <= 0) {
+          throw new Error(`Enter valid price & qty for ${p}`);
+        }
+        items.push({ product: p, price, quantity: qty });
+      }
+    }
+    if (items.length === 0) throw new Error('Select at least one product');
+    return items;
+  }
+
+  function computeDays(start, end){
+    if (!start || !end) return 1;
+    const s = new Date(start);
+    const e = new Date(end);
+    if (isNaN(s) || isNaN(e)) return 1;
+    const diff = Math.floor((e - s) / (1000*60*60*24)) + 1;
+    return Math.max(1, diff);
+  }
+
+  function generatePreview(){
+    try {
+     const name = val("customerName");
+const phone = val("phone");
+const alt = val("altPhone");
+const address = val("address");
+
+
+      if (!name || !phone || !address) {
+        showPopup({
+          title: "Missing details",
+          message: "Fill customer name, phone and address.",
+          type: "warning"
+        });
+        return;
+      }
+
+      const rent_start = document.getElementById('rent_start').value || null;
+      const rent_end = document.getElementById('rent_end').value || null;
+      const days = computeDays(rent_start, rent_end);
+
+      const items = collectItemsFromUI();
+
+      // compute totals
+      let grand = 0;
+      const rows = items.map(it=>{
+        const amt = Number(it.price) * Number(it.quantity) * days;
+        grand += amt;
+        return { ...it, amount: amt };
+      });
+
+      // store payload for download (server expects items with price & quantity)
+      savedPayload = {
+        name, phone, alt_phone: alt, address, rent_start, rent_end,
+        items: items.map(it => ({ product: it.product, price: it.price, quantity: it.quantity }))
+      };
+
+      // render preview
+      let html = `<div style="display:flex;justify-content:space-between;align-items:center">
+                    <div><h3 style="margin:0;text-decoration:underline;">SUBRAMANI ENTERPRISES</h3>
+                    <div class="muted">Phone: 9916067960, 8073024022</div></div>
+                    <div style="text-align:right"><small>${new Date().toLocaleDateString()}</small></div>
+                  </div>
+                  <hr/>
+                  <div><strong>Name:</strong> ${escapeHtml(name)} &nbsp; <strong>Phone:</strong> ${escapeHtml(phone)}</div>
+                  <div><strong>Address:</strong> ${escapeHtml(address)}</div>
+                  <div style="margin-top:8px">
+                  <strong>Rent:</strong> ${rent_start || 'N/A'} 
+                  ${rent_end ? (' to ' + rent_end) : ''} 
+                  &nbsp; <strong>(${days} day${days>1?'s':''})</strong>
+                  </div>
+                  <table>
+                    <thead><tr><th>Description</th><th>Price</th><th>Qty</th><th>Amount</th></tr></thead><tbody>`;
+
+      rows.forEach(r=> {
+        html += `<tr><td>${escapeHtml(r.product)}</td><td>${Number(r.price).toFixed(2)}</td><td>${r.quantity}</td><td>₹ ${Number(r.amount).toFixed(2)}</td></tr>`;
+      });
+
+      html += `<tr><td colspan="3" style="text-align:right"><strong>Total</strong></td><td><strong>₹ ${Number(grand).toFixed(2)}</strong></td></tr>`;
+      html += `</tbody></table>`;
+
+      previewBox.innerHTML = html;
+      previewBox.style.display = 'block';
+      previewBox.scrollIntoView({behavior:'smooth'});
+    } catch (err) {
+      showPopup({
+        title: "Preview error",
+        message: err.message || 'Error building preview.',
+        type: "error"
+      });
+    }
+  }
+
+  // ---------- DOWNLOAD (call backend) ----------
+  document.getElementById('btnDownload').addEventListener('click', async ()=>{
+    if (!savedPayload) {
+      // try to auto-generate payload from UI
+      try {
+        generatePreview(); // will set savedPayload
+      } catch (e) {
+        showPopup({
+          title: "No preview",
+          message: "Generate preview first or fix the input.",
+          type: "warning"
+        });
+        return;
+      }
+    }
+    // final check
+    if (!savedPayload) {
+      showPopup({
+        title: "Missing data",
+        message: "No bill data to send.",
+        type: "warning"
+      });
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/generate-bill', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(savedPayload)
+      });
+      const data = await res.json();
+      if (!data.success) {
+        showPopup({
+          title: "Failed to generate",
+          message: data.error || 'Error generating bill.',
+          type: "error"
+        });
+        return;
+      }
+      // open invoice PDF
+      window.open(`/api/invoice/${data.orderId}`, '_blank');
+    } catch (err) {
+      console.error(err);
+      showPopup({
+        title: "Server error",
+        message: "Server error while generating bill.",
+        type: "error"
+      });
+    }
+  });
+
+  // ---------- RESET ----------
+  document.getElementById('btnReset').addEventListener('click', ()=>{
+    document.getElementById('customerName').value = '';
+    document.getElementById('phone').value = '';
+    document.getElementById('altPhone').value = '';
+    document.getElementById('address').value = '';
+    document.getElementById('rent_start').value='';
+    document.getElementById('rent_end').value='';
+    searchInput.value = '';
+    searchResults.style.display = 'none';
+    previewBox.style.display = 'none';
+    savedPayload = null;
+    // remove rows & uncheck products
+    PRODUCTS.forEach(p=>{
+      const chk = document.getElementById(`chk_${p}`);
+      if (chk) chk.checked = false;
+      const r = document.getElementById(`row_${p}`);
+      if (r) r.remove();
+    });
+  });
+
+  // ---------- helpful: keyboard navigation handled in handleSearchKeydown ----------
+
+  // ---------- init ----------
+  (function init(){ /* nothing to do for now */ })();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Login</title>
+<link rel="stylesheet" href="popup.css">
+<style>
+  :root {
+    --accent:#1bcad6;
+    --bg1:#d9e4f5;
+    --bg2:#f7d9e3;
+    --text:#1f2d3d;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body{
+    font-family:"Segoe UI", "Inter", Arial, sans-serif;
+    min-height:100vh;
+    margin:0;
+    background:linear-gradient(135deg,#dcd8f3,#f5dfea);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:30px 16px;
+    color:#1c1e23;
+  }
+
+  .login-card{
+    width:100%;
+    max-width:440px;
+    padding:56px 60px 52px;
+    display:flex;
+    flex-direction:column;
+    gap:26px;
+    background:#fff;
+    border-radius:34px;
+    box-shadow:0 35px 70px rgba(90,78,130,0.25);
+  }
+
+  .login-card > div:first-child{
+    text-align:center;
+  }
+
+  .login-card > div:first-child::before{
+    content:"Login";
+    display:block;
+    font-size:32px;
+    font-weight:700;
+    margin-bottom:18px;
+    color:#111;
+  }
+
+  .login-card h2{
+    margin:0;
+    font-size:16px;
+    letter-spacing:0.18em;
+    color:#0f172a;
+  }
+
+  .login-card small{
+    color:#6b7280;
+    display:block;
+    margin-top:6px;
+    font-size:15px;
+  }
+
+  label{
+    display:none;
+  }
+
+  input{
+    width:100%;
+    padding:16px 18px;
+    border:1px solid #d8d8e5;
+    border-radius:14px;
+    font-size:16px;
+    background:#fff;
+    box-shadow:0 6px 15px rgba(0,0,0,0.05);
+    transition:border 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  input:focus{
+    border-color:#13c8d6;
+    outline:none;
+    box-shadow:0 8px 22px rgba(19,200,214,0.25);
+  }
+
+  input::placeholder{
+    color:#9aa1b4;
+    text-transform:lowercase;
+  }
+
+  .actions{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+
+  button{
+    width:100%;
+    padding:16px;
+    background:#10c4d6;
+    color:#fff;
+    border:none;
+    border-radius:14px;
+    font-size:17px;
+    font-weight:600;
+    cursor:pointer;
+    box-shadow:0 18px 28px rgba(16,196,214,0.35);
+    transition:background 0.2s ease, transform 0.2s ease;
+  }
+
+  button:hover{
+    background:#0fb1c1;
+    transform:translateY(-1px);
+  }
+
+  button:active{
+    transform:translateY(0);
+  }
+
+  #msg{
+    margin:0;
+    text-align:center;
+    font-weight:600;
+    color:#c0392b;
+  }
+
+  @media(max-width:520px){
+    .login-card{
+      padding:42px 28px;
+      border-radius:28px;
+    }
+  }
+</style>
+</head>
+
+<body>
+
+  <section class="login-card">
+    <div>
+      <h2>SUBRAMANI ENTERPRISES</h2>
+      <small>Please enter your credentials to continue.</small>
+    </div>
+
+    <div>
+      <label for="username">Username</label>
+      <input id="username" placeholder="Enter username" />
+    </div>
+
+    <div>
+      <label for="password">Password</label>
+      <input id="password" type="password" placeholder="Enter password" />
+    </div>
+
+    <div class="actions">
+      <button onclick="login()">Login</button>
+      <p id="msg"></p>
+    </div>
+  </section>
+
+
+<script src="popup.js"></script>
+<script>
+async function login() {
+  const u = document.getElementById("username").value;
+  const p = document.getElementById("password").value;
+
+  if (u === "sujatha" && p === "1234") {
+    showPopup({
+      title: "Login successful",
+      message: "Redirecting to dashboard...",
+      type: "success",
+      duration: 1200
+    });
+    setTimeout(()=> window.location.href = "home.html", 800);
+  } else {
+    showPopup({
+      title: "Invalid login",
+      message: "Check username and password.",
+      type: "error"
+    });
+  }
+}
+</script>
+
+</body>
+</html>
