@@ -385,17 +385,23 @@ const rentStartInput = document.getElementById("rent_start");
 
 function pad(n){ return n<10 ? "0"+n : n; }
 
-(function setAutoDate() {
+function formatDisplayDateDMY(value){
+  const d = value instanceof Date ? value : new Date(value);
+  if(isNaN(d)) return "";
+  return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
+}
+
+function setAutoDate() {
   const now = new Date();
+  const iso = now.toISOString().slice(0,10);
+  dateInput.dataset.iso = iso;
+  dateInput.value = formatDisplayDateDMY(now);
 
-  // For display (YYYY-MM-DD)
-  dateInput.value = now.toISOString().slice(0,10);
-
-  // For datetime-local (YYYY-MM-DDTHH:mm)
   const formatted = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
-
   rentStartInput.value = formatted;
-})();
+}
+
+setAutoDate();
 
 /* ------------------------------
    VALIDATE PHONE = ONLY 10 DIGITS
@@ -497,6 +503,7 @@ function resetForm(){
   itemsContainer.innerHTML="";
   PRODUCTS.forEach(p=> document.getElementById(`chk_${p}`).checked=false);
   updateItemsState();
+  setAutoDate();
 }
 
 /* ------------------------------
@@ -551,7 +558,7 @@ async function submitForm(){
     address,
     rent_start,
     items,
-    order_date: dateInput.value
+    order_date: dateInput.dataset.iso || dateInput.value
   };
 
   const res = await fetch("/api/new-customer", {

@@ -531,6 +531,15 @@ const PRODUCTS = [
   let activeResultIndex = -1;
   let lastQuery = '';
 
+  function pad(num){ return num < 10 ? `0${num}` : `${num}`; }
+
+  function formatDisplayDMY(value, fallback = 'N/A'){
+    if(!value) return fallback;
+    const d = value instanceof Date ? value : new Date(value);
+    if(isNaN(d)) return value || fallback;
+    return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
+  }
+
   function sanitizeFileName(name){
     return (name || 'invoice')
       .trim()
@@ -909,17 +918,20 @@ const address = val("address");
       };
 
       // render preview
+      const displayRentStart = rent_start ? formatDisplayDMY(rent_start) : 'N/A';
+      const displayRentEnd = rent_end ? formatDisplayDMY(rent_end) : '';
+
       let html = `<div style="display:flex;justify-content:space-between;align-items:center">
                     <div><h3 style="margin:0;text-decoration:underline;">SUBRAMANI ENTERPRISES</h3>
                     <div class="muted">Phone: 9916067960, 8073024022</div></div>
-                    <div style="text-align:right"><small>${new Date().toLocaleDateString()}</small></div>
+                    <div style="text-align:right"><small>${formatDisplayDMY(new Date())}</small></div>
                   </div>
                   <hr/>
                   <div><strong>Name:</strong> <span class="name-chip">${escapeHtml(name)}</span> &nbsp; <strong>Phone:</strong> ${escapeHtml(phone)}</div>
                   <div><strong>Address:</strong> ${escapeHtml(address)}</div>
                   <div style="margin-top:8px">
-                  <strong>Rent:</strong> ${rent_start || 'N/A'} 
-                  ${rent_end ? (' to ' + rent_end) : ''} 
+                  <strong>Rent:</strong> ${displayRentStart}
+                  ${displayRentEnd ? (' to ' + displayRentEnd) : ''} 
                   &nbsp; <strong>(${days} day${days>1?'s':''})</strong>
                   </div>
                   <table>

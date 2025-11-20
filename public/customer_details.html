@@ -398,6 +398,13 @@
 /* helper */
 function $id(id){ return document.getElementById(id); }
 function safeNumber(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
+function pad2(n){ return n < 10 ? `0${n}` : `${n}`; }
+function formatDisplayDate(value, fallback = "—"){
+  if(!value) return fallback;
+  const d = value instanceof Date ? value : new Date(value);
+  if(isNaN(d)) return value || fallback;
+  return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`;
+}
 let currentCustomerId = null;
 let currentLastOrder = null; // object { order: {...}, items: [...] }
 let customersCache = [];
@@ -439,7 +446,9 @@ async function loadCustomerDetails(id){
     ordersBody.innerHTML = '';
     data.orderDetails.forEach(o => {
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${o.order.order_date}</td><td>${o.order.rent_start || '-'}</td><td>₹ ${Number(o.order.total || 0).toFixed(2)}</td>`;
+      const orderDate = formatDisplayDate(o.order.order_date);
+      const rentStart = formatDisplayDate(o.order.rent_start);
+      tr.innerHTML = `<td>${orderDate}</td><td>${rentStart}</td><td>₹ ${Number(o.order.total || 0).toFixed(2)}</td>`;
       ordersBody.appendChild(tr);
     });
 
@@ -515,7 +524,7 @@ function renderCustomerList(list){
     if (c.rent_status === "RETURNED") { cardClass = "customer-card-returned"; statusText = "RETURNED"; }
     if (c.rent_status === "OVERDUE") { cardClass = "customer-card-overdue"; statusText = "OVERDUE"; }
 
-    const rentDate = c.rent_start ? new Date(c.rent_start).toLocaleDateString("en-IN") : "—";
+    const rentDate = formatDisplayDate(c.rent_start);
 
     const div = document.createElement('div');
     div.className = `customer-card ${cardClass}`;
