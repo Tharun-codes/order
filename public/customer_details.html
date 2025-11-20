@@ -314,7 +314,7 @@
         <p>View profiles, inspect historical orders, and update the most recent rental in one streamlined workspace.</p>
       </div>
       <div style="display:flex; gap:12px; flex-wrap:wrap;">
-        <a class="btn btn-outline" href="home.html">← Back to dashboard</a>
+        <button id="btnBack" class="btn btn-outline">← Back</button>
         <button id="btnDelete" class="btn btn-danger hidden">Delete</button>
       </div>
     </header>
@@ -817,6 +817,15 @@ function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"]/g, c=
 function getCustomerId(){
   return new URLSearchParams(window.location.search).get('customerId');
 }
+
+$id('btnBack').addEventListener('click', ()=>{
+  const id = getCustomerId();
+  if(id){
+    window.location.href = 'customer_details.html';
+  } else {
+    window.location.href = 'home.html';
+  }
+});
 
 /* -------------------------
    On load
