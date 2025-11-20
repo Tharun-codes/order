@@ -12,24 +12,35 @@
   stack.className = 'popup-stack';
   document.body.appendChild(stack);
 
-  const overlay = document.createElement('div');
-  overlay.className = 'popup-overlay';
-  overlay.innerHTML = `
-    <div class="confirm-popup" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
-      <h4 id="confirmTitle"></h4>
-      <p id="confirmMessage"></p>
-      <div class="popup-actions">
-        <button type="button" class="cancel">Cancel</button>
-        <button type="button" class="confirm">Confirm</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(overlay);
+  let overlay;
+  let confirmTitle;
+  let confirmMessage;
+  let cancelBtn;
+  let confirmBtn;
 
-  const confirmTitle = overlay.querySelector('#confirmTitle');
-  const confirmMessage = overlay.querySelector('#confirmMessage');
-  const cancelBtn = overlay.querySelector('.cancel');
-  const confirmBtn = overlay.querySelector('.confirm');
+  function ensureOverlay() {
+    if (overlay) return;
+
+    overlay = document.createElement('div');
+    overlay.className = 'popup-overlay';
+    overlay.innerHTML = `
+      <div class="confirm-popup" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+        <h4 id="confirmTitle"></h4>
+        <p id="confirmMessage"></p>
+        <div class="popup-actions">
+          <button type="button" class="cancel">Cancel</button>
+          <button type="button" class="confirm">Confirm</button>
+        </div>
+      </div>
+    `;
+    overlay.style.display = 'none';
+    document.body.appendChild(overlay);
+
+    confirmTitle = overlay.querySelector('#confirmTitle');
+    confirmMessage = overlay.querySelector('#confirmMessage');
+    cancelBtn = overlay.querySelector('.cancel');
+    confirmBtn = overlay.querySelector('.confirm');
+  }
 
   function removeToast(el) {
     if (!el) return;
@@ -74,6 +85,7 @@
     cancelText = 'Cancel',
     variant = 'confirm'
   } = {}) {
+    ensureOverlay();
     return new Promise((resolve) => {
       confirmTitle.textContent = title;
       confirmMessage.textContent = message;
@@ -85,10 +97,12 @@
         confirmBtn.classList.add('danger');
       }
 
+      overlay.style.display = 'flex';
       overlay.classList.add('show');
 
       function cleanup(result) {
         overlay.classList.remove('show');
+        overlay.style.display = 'none';
         cancelBtn.onclick = null;
         confirmBtn.onclick = null;
         overlay.onclick = null;
@@ -103,6 +117,7 @@
     });
   };
 })();
+
 
 
 
