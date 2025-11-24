@@ -125,10 +125,25 @@ const customerId = newCustomer.rows[0].id;
 /* ============================================================
    2) GENERATE BILL (Manual)
 ============================================================ */
+const EXTRA_ITEM_LABELS = ["old balance", "extra charges"];
+function isExtraItem(name = "") {
+  const lower = String(name).toLowerCase();
+  return EXTRA_ITEM_LABELS.includes(lower);
+}
+
 app.post("/api/generate-bill", async (req, res) => {
   const client = await pool.connect();
   try {
-    const { name, phone, alt_phone, address, rent_start, rent_end, items = [] } = req.body;
+    const {
+      name,
+      phone,
+      alt_phone,
+      address,
+      rent_start,
+      rent_end,
+      extra_charge = 0,
+      items = []
+    } = req.body;
 
     if (!name || !phone || !address) {
       return res.json({ success: false, error: "Missing required fields (name, phone, address)" });
@@ -165,6 +180,7 @@ app.post("/api/generate-bill", async (req, res) => {
     );
     const orderId = orderRes.rows[0].id;
 
+    const extraCharge = Math.max(0, safeNumber(extra_charge));
     let total = 0;
     for (const it of items) {
       const price = safeNumber(it.price);
@@ -177,6 +193,15 @@ app.post("/api/generate-bill", async (req, res) => {
          VALUES ($1,$2,$3,$4,$5)`,
         [orderId, it.product, price, qty, line]
       );
+    }
+
+    if (extraCharge > 0) {
+      await client.query(
+        `INSERT INTO order_items (order_id, product, price, quantity, line_total)
+         VALUES ($1,$2,$3,$4,$5)`,
+        [orderId, "Old balance", extraCharge, 1, extraCharge]
+      );
+      total += extraCharge;
     }
 
     await client.query(`UPDATE orders SET total=$1 WHERE id=$2`, [total, orderId]);
@@ -358,6 +383,7 @@ app.post("/api/update-order", async (req, res) => {
 app.get("/api/invoice/:orderId", async (req, res) => {
   try {
     const { orderId } = req.params;
+    const extraChargeOverride = Math.max(0, safeNumber(req.query.extraCharge));
     const orderQ = await pool.query(
       `SELECT o.*, c.name AS cname, c.phone AS cphone, c.address AS caddress
        FROM orders o JOIN customers c ON o.customer_id = c.id
@@ -371,6 +397,16 @@ app.get("/api/invoice/:orderId", async (req, res) => {
       `SELECT * FROM order_items WHERE order_id=$1 ORDER BY id ASC`,
       [orderId]
     );
+    const items = [...itemsQ.rows];
+    const hasExtraRow = items.some((it) => isExtraItem(it.product));
+    if (extraChargeOverride > 0 && !hasExtraRow) {
+      items.push({
+        product: "Old balance",
+        price: extraChargeOverride,
+        quantity: 1,
+        line_total: extraChargeOverride,
+      });
+    }
 
     const doc = new PDFDocument({ size: "A4", margin: 40 });
     const safeCustomerName = sanitizeFileName(order.cname);
@@ -472,10 +508,19 @@ doc.text(
     doc.font("Helvetica").fontSize(10).fillColor("#000");
     let y = tableTop + 25;
     let grand = 0;
-   for (const it of itemsQ.rows) {
-  const price = safeNumber(it.price);
-  const qty = safeNumber(it.quantity);
-  const amount = (safeNumber(it.line_total) || (price * qty)) * daysCount;
+    let perDayTotal = 0;
+    let extraChargesAmount = 0;
+    for (const it of items) {
+      const price = safeNumber(it.price);
+      const qty = safeNumber(it.quantity);
+      const lineBase = safeNumber(it.line_total) || price * qty;
+      const isExtra = isExtraItem(it.product);
+      if (isExtra) {
+        extraChargesAmount += lineBase;
+      } else {
+        perDayTotal += lineBase;
+      }
+      const amount = isExtra ? lineBase : lineBase * daysCount;
 
   // If next row exceeds current page space, start new page & redraw header
   if (y + 50 > doc.page.height - 60) {
@@ -504,14 +549,19 @@ doc.text(
   // print row
   doc.text(it.product, 40, y);
   doc.text(price.toFixed(2), 260, y);
-  doc.text(String(qty), 350, y);
+  doc.text(isExtra ? "-" : String(qty), 350, y);
   doc.text(amount.toFixed(2), 450, y);
 
   // breakdown
-  doc.fontSize(8).fillColor("#555")
-     .text(`(${price} × ${qty} × ${daysCount})`, 450, y + 10);
-
-  doc.fontSize(10).fillColor("#000");
+  if (!isExtra) {
+    doc.fontSize(8).fillColor("#555")
+      .text(`(${price} × ${qty} × ${daysCount})`, 450, y + 10);
+    doc.fontSize(10).fillColor("#000");
+  } else {
+    doc.fontSize(8).fillColor("#555")
+      .text("(one-time charge)", 450, y + 10);
+    doc.fontSize(10).fillColor("#000");
+  }
 
   grand += amount;
   y += 22;
@@ -525,29 +575,31 @@ doc.text(
 
   y += 8;
 
-      // Summary breakdown section
-// After loop ends, before drawing total box
-y += 20;
-doc.font("Helvetica-Bold").fontSize(11).fillColor(teal)
-   .text("PRICE CALCULATION SUMMARY", 40, y);
-y += 18;
+    // Summary breakdown section
+    y += 20;
+    doc.font("Helvetica-Bold").fontSize(11).fillColor(teal)
+      .text("PRICE CALCULATION SUMMARY", 40, y);
+    y += 18;
 
-doc.font("Helvetica").fontSize(10).fillColor("#000")
-doc.text(`Products Total (Per-day): ₹ ${(price * qty).toFixed(2)}`, 40, y);
-y += 16;
+    doc.font("Helvetica").fontSize(10).fillColor("#000");
+    doc.text(`Products Total (Per-day): ₹ ${perDayTotal.toFixed(2)}`, 40, y);
+    y += 16;
 
-doc.text(`Number of days: ${daysCount}`, 40, y);
-y += 16;
+    doc.text(`Number of days: ${daysCount}`, 40, y);
+    y += 16;
 
-doc.text(`Final Total: ₹ ${amount.toFixed(2)}`, 40, y);
+    if (extraChargesAmount > 0) {
+      doc.text(`Old balance: ₹ ${extraChargesAmount.toFixed(2)}`, 40, y);
+      y += 16;
+    }
 
-y += 30;
+    const finalTotal = perDayTotal * daysCount + extraChargesAmount;
+    doc.text(`Final Total: ₹ ${finalTotal.toFixed(2)}`, 40, y);
 
-// reset
-doc.fontSize(10).fillColor("#000");
+    y += 30;
+    doc.fontSize(10).fillColor("#000");
 
-
-      doc
+    doc
         .moveTo(40, y)
         .lineTo(550, y)
         .strokeColor("#ddd")

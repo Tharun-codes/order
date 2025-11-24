@@ -246,6 +246,23 @@
     gap: 18px;
   }
 
+  .dates-row {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+
+  .extras-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+    margin-top: 18px;
+  }
+
+  .extra-charge-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
   .products {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -479,7 +496,7 @@
       </div>
       <div id="productsList" class="products"></div>
       <div id="itemsContainer"></div>
-      <div class="field-grid" style="margin-top:22px;">
+      <div class="field-grid dates-row" style="margin-top:22px;">
         <div>
           <label>Rent Start</label>
           <input type="date" id="rent_start" />
@@ -487,6 +504,13 @@
         <div>
           <label>Rent End</label>
           <input type="date" id="rent_end" />
+        </div>
+      </div>
+      <div class="extras-grid">
+        <div class="extra-charge-block">
+          <label>Balance (optional)</label>
+          <input type="number" id="old_balance" placeholder="Add previous dues..." min="0" step="0.01" />
+          <small class="muted">Any balance entered is added on top of rent.</small>
         </div>
       </div>
     </section>
@@ -548,9 +572,10 @@ const PRODUCTS = [
       .slice(0, 80) || 'invoice';
   }
 
-  async function downloadInvoiceFile(orderId, customerName){
+  async function downloadInvoiceFile(orderId, customerName, extraCharge = 0){
     try {
-      const response = await fetch(`/api/invoice/${orderId}`);
+      const query = extraCharge > 0 ? `?extraCharge=${encodeURIComponent(extraCharge)}` : '';
+      const response = await fetch(`/api/invoice/${orderId}${query}`);
       if(!response.ok) throw new Error('Unable to fetch invoice');
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
@@ -852,7 +877,10 @@ const PRODUCTS = [
   }
 
   // ---------- PREVIEW ----------
-  document.getElementById('btnPreview').addEventListener('click', generatePreview);
+document.getElementById('btnPreview').addEventListener('click', (e)=>{
+    e.preventDefault();
+    generatePreview();
+  });
 
   function collectItemsFromUI(){
     const items = [];
@@ -880,7 +908,8 @@ const PRODUCTS = [
     return Math.max(1, diff);
   }
 
-function generatePreview(){
+function generatePreview(options = {}){
+    const { silent = false } = options;
     try {
      const name = val("customerName");
 const phone = val("phone");
@@ -899,6 +928,17 @@ const address = val("address");
 
       const rent_start = document.getElementById('rent_start').value || null;
       const rent_end = document.getElementById('rent_end').value || null;
+      const oldBalanceField = document.getElementById('old_balance');
+      const extraChargeInput = oldBalanceField ? oldBalanceField.value : '';
+      const extraCharge = extraChargeInput ? Number(extraChargeInput) : 0;
+      if (isNaN(extraCharge) || extraCharge < 0) {
+        showPopup({
+          title: "Invalid old balance",
+          message: "Old balance must be zero or a positive number.",
+          type: "warning"
+        });
+        return;
+      }
       const days = computeDays(rent_start, rent_end);
 
       const items = collectItemsFromUI();
@@ -914,6 +954,7 @@ const address = val("address");
       // store payload for download (server expects items with price & quantity)
       savedPayload = {
         name, phone, alt_phone: alt, address, rent_start, rent_end,
+        extra_charge: extraCharge,
         items: items.map(it => ({ product: it.product, price: it.price, quantity: it.quantity }))
       };
 
@@ -941,37 +982,33 @@ const address = val("address");
         html += `<tr><td>${escapeHtml(r.product)}</td><td>${Number(r.price).toFixed(2)}</td><td>${r.quantity}</td><td>₹ ${Number(r.amount).toFixed(2)}</td></tr>`;
       });
 
-      html += `<tr><td colspan="3" style="text-align:right"><strong>Total</strong></td><td><strong>₹ ${Number(grand).toFixed(2)}</strong></td></tr>`;
+      if (extraCharge > 0) {
+        html += `<tr><td colspan="3" style="text-align:right">Old balance</td><td>₹ ${extraCharge.toFixed(2)}</td></tr>`;
+      }
+      html += `<tr><td colspan="3" style="text-align:right"><strong>Total</strong></td><td><strong>₹ ${(Number(grand) + extraCharge).toFixed(2)}</strong></td></tr>`;
       html += `</tbody></table>`;
 
       previewBox.innerHTML = html;
       previewBox.style.display = 'block';
-      previewBox.scrollIntoView({behavior:'smooth'});
+      if (!silent) {
+        previewBox.scrollIntoView({behavior:'smooth'});
+      }
+      return true;
     } catch (err) {
       showPopup({
         title: "Preview error",
         message: err.message || 'Error building preview.',
         type: "error"
       });
+      return false;
     }
   }
 
   // ---------- DOWNLOAD (call backend) ----------
-  document.getElementById('btnDownload').addEventListener('click', async ()=>{
-    if (!savedPayload) {
-      // try to auto-generate payload from UI
-      try {
-        generatePreview(); // will set savedPayload
-      } catch (e) {
-        showPopup({
-          title: "No preview",
-          message: "Generate preview first or fix the input.",
-          type: "warning"
-        });
-        return;
-      }
+document.getElementById('btnDownload').addEventListener('click', async ()=>{
+    if (!generatePreview({ silent: true })) {
+      return;
     }
-    // final check
     if (!savedPayload) {
       showPopup({
         title: "Missing data",
@@ -980,7 +1017,6 @@ const address = val("address");
       });
       return;
     }
-
     try {
       const res = await fetch('/api/generate-bill', {
         method: 'POST',
@@ -997,7 +1033,7 @@ const address = val("address");
         return;
       }
       const nameForFile = savedPayload?.name || document.getElementById('customerName').value || 'invoice';
-      await downloadInvoiceFile(data.orderId, nameForFile);
+      await downloadInvoiceFile(data.orderId, nameForFile, savedPayload.extra_charge || 0);
     } catch (err) {
       console.error(err);
       showPopup({
